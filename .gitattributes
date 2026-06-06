@@ -1,0 +1,6 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+* text diff=rust
+
+# Lock files - normalize to LF across platforms, suppress noisy diffs
+*.lock text eol=lf -diff
