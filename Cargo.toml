@@ -6,11 +6,43 @@ members = [
     "packages/desktop",
     "packages/mobile",
     "packages/api",
+    "crates/core",
+    "crates/contract",
+    "crates/store",
+    "crates/sources",
+    "crates/ingest",
 ]
 
 [workspace.dependencies]
+# ── Existing ───────────────────────────────────────────────────────────────
 dioxus = { version = "0.7.1" }
+ui     = { path = "packages/ui" }
+api    = { path = "packages/api" }
 
-# workspace
-ui = { path = "packages/ui" }
-api = { path = "packages/api" }
+# ── Internal domain crates ─────────────────────────────────────────────────
+wisp-core     = { path = "crates/core" }
+wisp-contract = { path = "crates/contract" }
+wisp-store    = { path = "crates/store" }
+wisp-sources  = { path = "crates/sources" }
+wisp-ingest   = { path = "crates/ingest" }
+
+# ── Async ──────────────────────────────────────────────────────────────────
+async-trait = { version = "0.1" }
+
+# ── Error handling ──────────────────────────────────────────────────────────
+thiserror = { version = "2.0" }
+anyhow    = { version = "1.0" }
+
+# ── Serialization ───────────────────────────────────────────────────────────
+serde      = { version = "1.0", features = ["derive"] }
+serde_json = { version = "1.0" }
+
+# ── Geo / spatial ───────────────────────────────────────────────────────────
+geo     = { version = "0.29", default-features = false }
+geojson = { version = "0.24", features = ["geo-types"] }
+
+# ── Time ────────────────────────────────────────────────────────────────────
+chrono = { version = "0.4", default-features = false, features = ["serde"] }
+
+# ── IDs ─────────────────────────────────────────────────────────────────────
+uuid = { version = "1", features = ["v4", "serde"] }

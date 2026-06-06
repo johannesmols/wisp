@@ -1,0 +1,17 @@
+[package]
+name = "wisp-ingest"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+wisp-core     = { workspace = true }
+wisp-contract = { workspace = true }
+wisp-store    = { workspace = true }
+wisp-sources  = { workspace = true }
+async-trait   = { workspace = true }
+anyhow        = { workspace = true }
+
+[dev-dependencies]
+async-trait = { workspace = true }
+chrono      = { workspace = true }
+tokio       = { version = "1", features = ["rt", "macros"] }

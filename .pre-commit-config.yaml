@@ -1,0 +1,30 @@
+# Pre-commit hook configuration for Wisp.
+#
+# Uses prek (https://github.com/j178/prek) — a Rust-native pre-commit runner.
+# No Python or Node.js needed: prek manages the toolchain automatically.
+#
+# Setup (once per machine):   winget install j178.Prek   or   cargo binstall prek
+# Setup (once per clone):     prek install
+# Run manually:               prek run --all-files
+
+repos:
+  - repo: local
+    hooks:
+      # Formats Rust, Markdown, JSON, TOML, CSS via Prettier.
+      # prek auto-installs Node.js and the listed npm packages on first run.
+      - id: prettier
+        name: prettier
+        language: node
+        entry: prettier --write
+        types_or: [markdown, json, css]
+        pass_filenames: true
+        additional_dependencies:
+          - prettier@3.8.3
+
+      # Standard Rust formatter check. Runs workspace-wide (can't take file args).
+      - id: cargo-fmt
+        name: cargo fmt
+        language: rust
+        entry: cargo fmt -- --check
+        types: [rust]
+        pass_filenames: false

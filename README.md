@@ -1,76 +1,83 @@
-# Development
+# Wisp
 
-Your new workspace contains a member crate for each of the web, desktop and mobile platforms, a `ui` crate for shared components and a `api` crate for shared backend logic:
+Personal driving heatmap explorer. Multi-source (GPX, Strava, Connected Cars, Google Timeline),
+offline-capable, runs as a web app or native desktop/mobile app via [Dioxus](https://dioxuslabs.com/).
 
-```
-your_project/
-├─ README.md
-├─ Cargo.toml
-└─ packages/
-   ├─ web/
-   │  └─ ... # Web specific UI/logic
-   ├─ desktop/
-   │  └─ ... # Desktop specific UI/logic
-   ├─ mobile/
-   │  └─ ... # Mobile specific UI/logic
-   ├─ api/
-   │  └─ ... # All shared server logic
-   └─  ui/
-      └─ ... # Component shared between multiple platforms
-```
+## Prerequisites
 
-## Platform crates
+Install these once per machine. After each `winget` install, **open a new terminal** so the
+updated PATH takes effect.
 
-Each platform crate contains the entry point for the platform, and any assets, components and dependencies that are specific to that platform. For example, the desktop crate in the workspace looks something like this:
+```powershell
+winget install Rustlang.Rustup      # Rust toolchain manager
+rustup update stable                # ensure stable is current
 
-```
-desktop/ # The desktop crate contains all platform specific UI, logic and dependencies for the desktop app
-├─ assets/ # Assets used by the desktop app - Any platform specific assets should go in this folder
-├─ src/
-│  ├─ main.rs # The entrypoint for the desktop app. It also defines the routes for the desktop platform
-│  ├─ views/ # The views each route will render in the desktop version of the app
-│  │  ├─ mod.rs # Defines the module for the views route and re-exports the components for each route
-│  │  ├─ blog.rs # The component that will render at the /blog/:id route
-│  │  ├─ home.rs # The component that will render at the / route
-├─ Cargo.toml # The desktop crate's Cargo.toml - This should include all desktop specific dependencies
+winget install Casey.Just           # just task runner
+winget install j178.Prek            # prek pre-commit hook manager
+
+cargo install --locked cargo-nextest         # faster test runner (used by `just test`)
+cargo install dioxus-cli            # dx CLI (used by `just serve-*`)
 ```
 
-When you start developing with the workspace setup each of the platform crates will look almost identical. The UI starts out exactly the same on all platforms. However, as you continue developing your application, this setup makes it easy to let the views for each platform change independently.
+> `cargo install` compiles from source and takes a few minutes. If you have
+> [`cargo-binstall`](https://github.com/cargo-bins/cargo-binstall) installed, replace
+> `cargo install` with `cargo binstall` to download pre-built binaries instead.
 
-## Shared UI crate
+The `wasm32-unknown-unknown` target is added automatically from `rust-toolchain.toml` on first
+build — no manual `rustup target add` needed.
 
-The workspace contains a `ui` crate with components that are shared between multiple platforms. You should put any UI elements you want to use in multiple platforms in this crate. You can also put some shared client side logic in this crate, but be careful to not pull in platform specific dependencies. The `ui` crate starts out something like this:
+## First-time setup
 
-```
-ui/
-├─ src/
-│  ├─ lib.rs # The entrypoint for the ui crate
-│  ├─ hero.rs # The Hero component that will be used in every platform
-│  ├─ echo.rs # The shared echo component that communicates with the server
-│  ├─ navbar.rs # The Navbar component that will be used in the layout of every platform's router
-```
-
-## Shared backend logic
-
-The workspace contains a `api` crate with shared backend logic. This crate defines all of the shared server functions for all platforms. Server functions are async functions that expose a public API on the server. They can be called like a normal async function from the client. When you run `dx serve`, all of the server functions will be collected in the server build and hosted on a public API for the client to call. The `api` crate starts out something like this:
-
-```
-api/
-├─ src/
-│  ├─ lib.rs # Exports a server function that echos the input string
+```powershell
+git clone <repo>
+cd wisp
+prek install   # registers pre-commit hooks from .pre-commit-config.yaml — run once per clone
 ```
 
-### Serving Your App
+## Running things
 
-Navigate to the platform crate of your choice:
-```bash
-cd web
+All common tasks are in the `justfile`. Run `just` with no arguments to list them:
+
+```
+just check              # cargo check --workspace (fast type-check, no codegen)
+just check-wasm         # verify wisp-core compiles to wasm32 (keeps it browser-safe)
+just fmt                # format everything: rustfmt + Prettier via prek
+just fmt-check          # same checks without modifying files (used in CI)
+just lint               # clippy --all-targets -D warnings
+just test               # run all tests with cargo-nextest
+just test-crate <name>  # run tests for one crate, e.g. just test-crate wisp-core
+just serve-web          # dx serve --package web (hot-reload)
+just serve-desktop      # dx serve --package desktop
+just ci                 # fmt-check + check + check-wasm + lint + test (run before pushing)
 ```
 
-and serve:
+## Project structure
 
-```bash
-dx serve
+```
+wisp/
+├─ packages/           # Dioxus deployment targets + shared layers
+│  ├─ web/             # Web build (wasm32)
+│  ├─ desktop/         # Native desktop build
+│  ├─ mobile/          # Mobile build
+│  ├─ ui/              # Shared Dioxus components
+│  └─ api/             # Shared Dioxus server functions
+└─ crates/             # Domain + ports (hexagonal architecture)
+   ├─ core/            # Pure domain types: Trip, TripId, SourceKind, Bbox
+   ├─ contract/        # TripService trait + DTOs (the main "interface assembly")
+   ├─ store/           # TripStore port (persistence)
+   ├─ sources/         # TripSource port (external data fetch)
+   └─ ingest/          # Orchestrator: fetch → normalise → persist
 ```
 
+## Pre-commit hooks
 
+Hooks run automatically on `git commit` after `prek install`. They cover:
+
+- **Prettier** — formats `.rs`, `.md`, `.json`, `.toml`, `.css`
+- **cargo fmt** — checks Rust formatting workspace-wide
+
+To run them manually against all files:
+
+```powershell
+prek run --all-files
+```

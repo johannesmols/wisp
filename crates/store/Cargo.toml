@@ -1,0 +1,14 @@
+[package]
+name = "wisp-store"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+wisp-core   = { workspace = true }
+async-trait = { workspace = true }
+thiserror   = { workspace = true }
+chrono      = { workspace = true }
+
+[dev-dependencies]
+async-trait = { workspace = true }
+tokio       = { version = "1", features = ["rt", "macros"] }
